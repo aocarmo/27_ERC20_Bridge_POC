@@ -1,3 +1,5 @@
+//const serverUrl = "https://vnhmgmw1dgxz.usemoralis.com:2053/server";
+//const appId = "BCLjEvCEo64ODlbI0LCjwKTjZpm5pCrUk3xIlWIb";
 const serverUrl = "";
 const appId = "";
 Moralis.start({ serverUrl, appId }); 
@@ -11,14 +13,14 @@ async function login(){
     Moralis.Web3.enableWeb3().then(async function (){
         renderBridgeData();
         subscribeUpdateBridged();
-        const chainIdHex = await Moralis.switchNetwork("0x4"); 
+        const chainIdHex = await Moralis.switchNetwork("0x61"); 
     });
 }
 
 async function bridge(){
     const amountToBridge = document.getElementById("amountToken").value;
     const options = {type: "erc20", 
-                 amount: Moralis.Units.Token(amountToBridge, "18"), 
+                 amount: Moralis.Units.Token(amountToBridge, "9"), 
                  receiver: mainBridgeAddress,
                  contractAddress: mainTokenAddress}
     let result = await Moralis.transfer(options)
@@ -72,7 +74,7 @@ function buildTableLocked(data){
     for (let i=0; i < data.length; i++){
         let row = `<tr>
                         <td>${data[i].mainDepositHash}</td>
-                        <td>${data[i].amount/1e18}</td>
+                        <td>${data[i].amount/1e9}</td>
                         <td>${data[i].requester}</td>
                     </tr>`
         table.innerHTML += row
@@ -94,7 +96,7 @@ function buildTableBridged(data){
     for (let i=0; i < data.length; i++){
         let row = `<tr>
                         <td>${data[i].mainDepositHash}</td>
-                        <td>${data[i].amount/1e18}</td>
+                        <td>${data[i].amount/1e9}</td>
                         <td>${data[i].requester}</td>
                     </tr>`
         table.innerHTML += row

@@ -1,3 +1,5 @@
+//const serverUrl = "https://vnhmgmw1dgxz.usemoralis.com:2053/server";
+//const appId = "BCLjEvCEo64ODlbI0LCjwKTjZpm5pCrUk3xIlWIb";
 const serverUrl = "";
 const appId = "";
 Moralis.start({ serverUrl, appId }); 
@@ -18,7 +20,7 @@ async function login(){
 async function returnToken(){
     const amountToReturn = document.getElementById("amountToken").value;
     const options = {type: "erc20", 
-                 amount: Moralis.Units.Token(amountToReturn, "18"), 
+                 amount: Moralis.Units.Token(amountToReturn, "9"), 
                  receiver: sideBridgeAddress,
                  contractAddress: childTokenAddress}
     let result = await Moralis.transfer(options)
