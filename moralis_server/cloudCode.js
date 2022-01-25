@@ -1,7 +1,7 @@
 const logger = Moralis.Cloud.getLogger();
 
-const web3Main = Moralis.web3ByChain("0x4"); // Rinkeby Testnet
-const web3Side = Moralis.web3ByChain("0x13881"); // Mumbai Testnet
+const web3Main = Moralis.web3ByChain("0x38"); // BSC Main net
+const web3Side = Moralis.web3ByChain("0x89"); // Polygon  Main net
 
 const MainBridge_address = "";
 const SideBridge_address = "";
@@ -14,10 +14,15 @@ const SideBridge_abi = '[{"inputs": [{"internalType": "address", "name": "_gatew
 const MainBridge = new web3Main.eth.Contract(JSON.parse(MainBridge_abi),MainBridge_address);
 const SideBridge = new web3Side.eth.Contract(JSON.parse(SideBridge_abi),SideBridge_address);
 
-Moralis.Cloud.afterSave("EthTokenTransfers", (request) => {
+
+Moralis.Cloud.afterSave("BscTokenTransfers", (request) => {
     const data = JSON.parse(JSON.stringify(request.object, ["token_address", "to_address", "from_address","transaction_hash","value", "confirmed"]));
     logger.info(data);
-    if (data["token_address"] == mainToken_address.toLocaleLowerCase() && data["to_address"] == MainBridge_address.toLocaleLowerCase() && !data["confirmed"]) {
+    if (data["token_address"] == mainToken_address.toLocaleLowerCase() 
+        && data["to_address"] == MainBridge_address.toLocaleLowerCase() 
+        && data["confirmed"]
+        && data["from_address"] !== MainBridge_address.toLocaleLowerCase() // bridge can send itself fees for gas
+    ) {
         const txlock = processBridgeRequestLock(data);
         const txbridge = processBridgeRequestBridge(data);
     }
@@ -26,8 +31,11 @@ Moralis.Cloud.afterSave("EthTokenTransfers", (request) => {
     }
     async function processBridgeRequestLock(data) {
         logger.info("bridging starting locking tokens");
+        logger.info(data);
+         logger.info("1");
         const functionCall = MainBridge.methods.lockTokens(data["from_address"],data["value"],data["transaction_hash"]).encodeABI();
         const gatewayNonce = web3Main.eth.getTransactionCount(gateway_address);
+      logger.info("2");
         const transactionBody = {
             to: MainBridge_address,
             nonce:gatewayNonce,
@@ -35,10 +43,16 @@ Moralis.Cloud.afterSave("EthTokenTransfers", (request) => {
             gas:400000,
             gasPrice:web3Main.utils.toWei("2", "gwei")
         }
+	
+      logger.info("3");
         signedTransaction = await web3Main.eth.accounts.signTransaction(transactionBody,gatewayKey);
+      logger.info("4");
         logger.info(signedTransaction.transactionHash);
+      logger.info("5");
         fulfillTx = await web3Main.eth.sendSignedTransaction(signedTransaction.rawTransaction);
+      logger.info("6");
         logger.info("fulfillTx: " + JSON.stringify(fulfillTx));
+      logger.info("7");
     }
     async function processBridgeRequestBridge(data) {
         logger.info("bridging tokens");
@@ -51,10 +65,15 @@ Moralis.Cloud.afterSave("EthTokenTransfers", (request) => {
               gas:400000,
               gasPrice:web3Side.utils.toWei("2", "gwei")
         }
+	
         signedTransaction = await web3Side.eth.accounts.signTransaction(transactionBody,gatewayKey);
+      logger.info("1");
         logger.info(signedTransaction.transactionHash);
+      logger.info("2");
         fulfillTx = await web3Side.eth.sendSignedTransaction(signedTransaction.rawTransaction);
+      logger.info("3");
         logger.info("fulfillTx: " + JSON.stringify(fulfillTx))
+      logger.info("4");
         return fulfillTx;
     }
 });
